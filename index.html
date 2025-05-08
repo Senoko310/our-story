@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>留言板</title>
+  <style>
+    body { font-family: Arial; margin: 20px; }
+    input, textarea { width: 100%; margin-bottom: 10px; }
+    .message { border-bottom: 1px solid #ccc; margin: 10px 0; padding: 5px 0; }
+    .nickname { font-weight: bold; }
+    .timestamp { font-size: 0.8em; color: #666; }
+  </style>
+</head>
+<body>
+  <h1>我的留言板</h1>
+  <input type="text" id="nickname" placeholder="你的昵称">
+  <textarea id="message" rows="3" placeholder="写点什么..."></textarea>
+  <button onclick="submitMessage()">提交</button>
+
+  <div id="messages"></div>
+
+  <script>
+    function submitMessage() {
+      const nickname = document.getElementById('nickname').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if (!nickname || !message) return;
+
+      const time = new Date().toLocaleString();
+      const newMsg = { nickname, message, time };
+
+      const msgList = JSON.parse(localStorage.getItem('messages') || '[]');
+      msgList.unshift(newMsg);
+      localStorage.setItem('messages', JSON.stringify(msgList));
+      displayMessages();
+      document.getElementById('message').value = '';
+    }
+
+    function displayMessages() {
+      const msgList = JSON.parse(localStorage.getItem('messages') || '[]');
+      const container = document.getElementById('messages');
+      container.innerHTML = msgList.map(msg => `
+        <div class="message">
+          <div class="nickname">${msg.nickname}</div>
+          <div>${msg.message}</div>
+          <div class="timestamp">${msg.time}</div>
+        </div>
+      `).join('');
+    }
+
+    displayMessages();
+  </script>
+</body>
+</html>
