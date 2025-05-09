@@ -1,53 +1,85 @@
 <!DOCTYPE html>
 <html lang="zh">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>留言板</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxH-cnv7jtJRuzhvBHRZVBNyXXG9dvdwM",
+      authDomain: "message-board-6ccb5.firebaseapp.com",
+      projectId: "message-board-6ccb5",
+      storageBucket: "message-board-6ccb5.firebasestorage.app",
+      messagingSenderId: "860538002965",
+      appId: "1:860538002965:web:9bb3382be721f7c4bb781c"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const messagesRef = collection(db, "messages");
+
+    const form = document.getElementById("messageForm");
+    const list = document.getElementById("messageList");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const name = form.name.value.trim();
+      const message = form.message.value.trim();
+      if (!name || !message) return;
+      await addDoc(messagesRef, {
+        name,
+        message,
+        timestamp: new Date()
+      });
+      form.reset();
+    });
+
+    const q = query(messagesRef, orderBy("timestamp", "desc"));
+    onSnapshot(q, (snapshot) => {
+      list.innerHTML = "";
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.textContent = `${data.name}：${data.message}（${new Date(data.timestamp.seconds * 1000).toLocaleString()}）`;
+        list.appendChild(li);
+      });
+    });
+  </script>
   <style>
-    body { font-family: Arial; margin: 20px; }
-    input, textarea { width: 100%; margin-bottom: 10px; }
-    .message { border-bottom: 1px solid #ccc; margin: 10px 0; padding: 5px 0; }
-    .nickname { font-weight: bold; }
-    .timestamp { font-size: 0.8em; color: #666; }
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: auto;
+      padding: 1em;
+      background: #f9f9f9;
+    }
+    input, textarea {
+      width: 100%;
+      margin-bottom: 1em;
+      padding: 0.5em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      padding: 0.5em;
+      border-bottom: 1px solid #ddd;
+    }
   </style>
 </head>
 <body>
-  <h1>我的留言板</h1>
-  <input type="text" id="nickname" placeholder="你的昵称">
-  <textarea id="message" rows="3" placeholder="写点什么..."></textarea>
-  <button onclick="submitMessage()">提交</button>
-
-  <div id="messages"></div>
-
-  <script>
-    function submitMessage() {
-      const nickname = document.getElementById('nickname').value.trim();
-      const message = document.getElementById('message').value.trim();
-      if (!nickname || !message) return;
-
-      const time = new Date().toLocaleString();
-      const newMsg = { nickname, message, time };
-
-      const msgList = JSON.parse(localStorage.getItem('messages') || '[]');
-      msgList.unshift(newMsg);
-      localStorage.setItem('messages', JSON.stringify(msgList));
-      displayMessages();
-      document.getElementById('message').value = '';
-    }
-
-    function displayMessages() {
-      const msgList = JSON.parse(localStorage.getItem('messages') || '[]');
-      const container = document.getElementById('messages');
-      container.innerHTML = msgList.map(msg => `
-        <div class="message">
-          <div class="nickname">${msg.nickname}</div>
-          <div>${msg.message}</div>
-          <div class="timestamp">${msg.time}</div>
-        </div>
-      `).join('');
-    }
-
-    displayMessages();
-  </script>
+  <h1>留言板</h1>
+  <form id="messageForm">
+    <input type="text" name="name" placeholder="你的昵称" required />
+    <textarea name="message" placeholder="写下你的留言…" required></textarea>
+    <button type="submit">提交</button>
+  </form>
+  <ul id="messageList"></ul>
 </body>
 </html>
