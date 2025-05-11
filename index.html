@@ -1,18 +1,104 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>留言板</title>
+  <meta charset="UTF-8">
+  <title>我们的留言板 ❤️</title>
+  <style>
+    body {
+      background-color: #FFF8E7;
+      font-family: 'Comic Sans MS', cursive, sans-serif;
+      color: #333;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #FFC0CB;
+      text-align: center;
+      font-size: 2.5em;
+    }
+
+    form {
+      margin-top: 40px;
+      text-align: center;
+    }
+
+    input, textarea {
+      width: 80%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 2px solid #FFC0CB;
+      border-radius: 10px;
+      background-color: #FFF0F5;
+      font-size: 1em;
+    }
+
+    button {
+      padding: 10px 20px;
+      background-color: #FFC0CB;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #ff99aa;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-top: 30px;
+    }
+
+    li {
+      background-color: #FFF0F5;
+      margin: 10px auto;
+      padding: 15px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: 0 2px 5px rgba(255, 182, 193, 0.3);
+      font-size: 1em;
+    }
+
+    .pagination {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>我们的留言板 ❤️</h1>
+
+  <form id="messageForm">
+    <input type="text" id="nameInput" placeholder="昵称" required><br>
+    <textarea id="messageInput" placeholder="写下你的留言..." required></textarea><br>
+    <button type="submit">发送</button>
+  </form>
+
+  <ul id="messageList"></ul>
+
+  <div class="pagination">
+    <button id="prevPage">上一页</button>
+    <button id="nextPage">下一页</button>
+  </div>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, orderBy, limit, startAfter, endBefore, getDocs,
+      deleteDoc, doc as docRef
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyBxH-cnv7jtJRuzhvBHRZVBNyXXG9dvdwM",
       authDomain: "message-board-6ccb5.firebaseapp.com",
       projectId: "message-board-6ccb5",
-      storageBucket: "message-board-6ccb5.firebasestorage.app",
+      storageBucket: "message-board-6ccb5.appspot.com",
       messagingSenderId: "860538002965",
       appId: "1:860538002965:web:9bb3382be721f7c4bb781c"
     };
@@ -22,101 +108,71 @@
     const messagesRef = collection(db, "messages");
 
     const form = document.getElementById("messageForm");
+    const nameInput = document.getElementById("nameInput");
+    const messageInput = document.getElementById("messageInput");
     const list = document.getElementById("messageList");
+
+    let pageSize = 20;
+    let lastVisible = null;
+    let firstVisible = null;
+    let currentDocs = [];
+
+    async function loadMessages(direction = "initial") {
+      let q;
+      if (direction === "next" && lastVisible) {
+        q = query(messagesRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(pageSize));
+      } else if (direction === "prev" && firstVisible) {
+        q = query(messagesRef, orderBy("timestamp", "desc"), endBefore(firstVisible), limit(pageSize));
+      } else {
+        q = query(messagesRef, orderBy("timestamp", "desc"), limit(pageSize));
+      }
+
+      const snapshot = await getDocs(q);
+      list.innerHTML = "";
+      currentDocs = [];
+
+      snapshot.forEach(doc => {
+        currentDocs.push(doc);
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${data.name}</strong>：${data.message}<br>
+          <small>${new Date(data.timestamp.seconds * 1000).toLocaleString()}</small><br>
+          <button data-id="${doc.id}" class="delete-btn">删除</button>
+        `;
+        list.appendChild(li);
+      });
+
+      firstVisible = currentDocs[0];
+      lastVisible = currentDocs[currentDocs.length - 1];
+    }
 
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const name = form.name.value.trim();
-      const message = form.message.value.trim();
-      if (!name || !message) return;
       await addDoc(messagesRef, {
-        name,
-        message,
-        timestamp: new Date()
+        name: nameInput.value,
+        message: messageInput.value,
+        timestamp: serverTimestamp()
       });
-      form.reset();
+      nameInput.value = "";
+      messageInput.value = "";
+      loadMessages();
     });
 
-    const q = query(messagesRef, orderBy("timestamp", "desc"));
-    onSnapshot(q, (snapshot) => {
-      list.innerHTML = "";
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const li = document.createElement("li");
-        li.textContent = `${data.name}：${data.message}（${new Date(data.timestamp.seconds * 1000).toLocaleString()}）`;
-        list.appendChild(li);
-      });
+    list.addEventListener("click", async (e) => {
+      if (e.target.classList.contains("delete-btn")) {
+        const id = e.target.dataset.id;
+        if (confirm("确定要删除这条留言吗？")) {
+          await deleteDoc(docRef(db, "messages", id));
+          loadMessages();
+        }
+      }
     });
+
+    document.getElementById("nextPage").addEventListener("click", () => loadMessages("next"));
+    document.getElementById("prevPage").addEventListener("click", () => loadMessages("prev"));
+
+    loadMessages();
   </script>
-  <style>
-    body {
-  background-color: #FFF8E7;
-  font-family: 'Comic Sans MS', cursive, sans-serif;
-  color: #333;
-  padding: 20px;
-}
-
-h1 {
-  color: #FFC0CB;
-  text-align: center;
-  font-size: 2.5em;
-}
-
-form {
-  margin-top: 40px;
-  text-align: center;
-}
-
-input, textarea {
-  width: 80%;
-  padding: 10px;
-  margin: 10px 0;
-  border: 2px solid #FFC0CB;
-  border-radius: 10px;
-  background-color: #FFF0F5;
-  font-size: 1em;
-}
-
-button {
-  padding: 10px 20px;
-  background-color: #FFC0CB;
-  border: none;
-  border-radius: 10px;
-  color: white;
-  font-size: 1em;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-
-button:hover {
-  background-color: #ff99aa;
-}
-
-ul {
-  list-style: none;
-  padding: 0;
-  margin-top: 30px;
-}
-
-li {
-  background-color: #FFF0F5;
-  margin: 10px auto;
-  padding: 15px;
-  border-radius: 10px;
-  width: 90%;
-  max-width: 600px;
-  box-shadow: 0 2px 5px rgba(255, 182, 193, 0.3);
-  font-size: 1em;
-}
-  </style>
-</head>
-<body>
-  <h1>留言板</h1>
-  <form id="messageForm">
-    <input type="text" name="name" placeholder="你的昵称" required />
-    <textarea name="message" placeholder="写下你的留言…" required></textarea>
-    <button type="submit">提交</button>
-  </form>
-  <ul id="messageList"></ul>
 </body>
 </html>
