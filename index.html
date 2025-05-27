@@ -68,28 +68,6 @@
       text-align: center;
       margin-top: 20px;
     }
-
-    .tabs {
-      display: flex;
-      justify-content: center;
-      margin: 20px 0;
-      gap: 10px;
-    }
-
-    .tab {
-      padding: 8px 14px;
-      background-color: #f8e8e0;
-      border: 1px solid #d8b8b8;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .tab.active {
-      background-color: #f2c1c1;
-      font-weight: bold;
-      color: white;
-    }
   </style>
 </head>
 <body>
@@ -101,13 +79,6 @@
     <button type="submit">发送</button>
   </form>
 
-  <div id="sectionTabs" class="tabs">
-    <button data-section="闲聊区" class="tab active">🗨️ 闲聊区</button>
-    <button data-section="梦境集" class="tab">🌙 梦境集</button>
-    <button data-section="影音角" class="tab">🎥 影音角</button>
-    <button data-section="办公室" class="tab">🖥️ 办公室</button>
-  </div>
-
   <ul id="messageList"></ul>
 
   <div class="pagination">
@@ -116,158 +87,92 @@
   </div>
 
   <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore, collection, addDoc, serverTimestamp,
-  query, orderBy, limit, startAfter, endBefore, getDocs,
-  deleteDoc, doc as docRef, where
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, orderBy, limit, startAfter, endBefore, getDocs,
+      deleteDoc, doc as docRef
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-// 初始化 Firebase
-const firebaseConfig = {
-  apiKey: "AIzaSyBxH-cnv7jtJRuzhvBHRZVBNyXXG9dvdwM",
-  authDomain: "message-board-6ccb5.firebaseapp.com",
-  projectId: "message-board-6ccb5",
-  storageBucket: "message-board-6ccb5.appspot.com",
-  messagingSenderId: "860538002965",
-  appId: "1:860538002965:web:9bb3382be721f7c4bb781c"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyBxH-cnv7jtJRuzhvBHRZVBNyXXG9dvdwM",
+      authDomain: "message-board-6ccb5.firebaseapp.com",
+      projectId: "message-board-6ccb5",
+      storageBucket: "message-board-6ccb5.appspot.com",
+      messagingSenderId: "860538002965",
+      appId: "1:860538002965:web:9bb3382be721f7c4bb781c"
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const messagesRef = collection(db, "messages");
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const messagesRef = collection(db, "messages");
 
-// DOM 元素
-const form = document.getElementById("messageForm");
-const nameInput = document.getElementById("nameInput");
-const messageInput = document.getElementById("messageInput");
-const sectionInput = document.getElementById("sectionInput");
-const list = document.getElementById("messageList");
-const tabs = document.querySelectorAll(".tab");
+    const form = document.getElementById("messageForm");
+    const nameInput = document.getElementById("nameInput");
+    const messageInput = document.getElementById("messageInput");
+    const list = document.getElementById("messageList");
 
-let pageSize = 20;
-let lastVisible = null;
-let firstVisible = null;
-let currentSection = "闲聊区";
+    let pageSize = 20;
+    let lastVisible = null;
+    let firstVisible = null;
+    let currentDocs = [];
 
-// 加载留言
-async function loadMessages(direction = "initial") {
-  let q;
+    async function loadMessages(direction = "initial") {
+      let q;
+      if (direction === "next" && lastVisible) {
+        q = query(messagesRef, orderBy("timestamp", "desc"), startAfter(lastVisible), limit(pageSize));
+      } else if (direction === "prev" && firstVisible) {
+        q = query(messagesRef, orderBy("timestamp", "desc"), endBefore(firstVisible), limit(pageSize));
+      } else {
+        q = query(messagesRef, orderBy("timestamp", "desc"), limit(pageSize));
+      }
 
-  if (direction === "next" && lastVisible) {
-    q = query(
-      messagesRef,
-      where("section", "==", currentSection),
-      orderBy("timestamp", "desc"),
-      startAfter(lastVisible),
-      limit(pageSize)
-    );
-  } else if (direction === "prev" && firstVisible) {
-    q = query(
-      messagesRef,
-      where("section", "==", currentSection),
-      orderBy("timestamp", "desc"),
-      endBefore(firstVisible),
-      limit(pageSize)
-    );
-  } else {
-    q = query(
-      messagesRef,
-      where("section", "==", currentSection),
-      orderBy("timestamp", "desc"),
-      limit(pageSize)
-    );
-  }
+      const snapshot = await getDocs(q);
+      list.innerHTML = "";
+      currentDocs = [];
 
-  const snapshot = await getDocs(q);
-  list.innerHTML = "";
+      snapshot.forEach(doc => {
+        currentDocs.push(doc);
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.innerHTML = `
+          <strong>${data.name}</strong>：${data.message}<br>
+          <small>${new Date(data.timestamp.seconds * 1000).toLocaleString()}</small><br>
+          <button data-id="${doc.id}" class="delete-btn">删除</button>
+        `;
+        list.appendChild(li);
+      });
 
-  if (snapshot.empty) {
-    list.innerHTML = "<li>暂无留言</li>";
-    return;
-  }
+      firstVisible = currentDocs[0];
+      lastVisible = currentDocs[currentDocs.length - 1];
+    }
 
-  const docs = snapshot.docs;
-  firstVisible = docs[0];
-  lastVisible = docs[docs.length - 1];
-
-  docs.forEach(doc => {
-    const data = doc.data();
-    const li = document.createElement("li");
-    li.innerHTML = `
-      <strong>${data.name}</strong>：${data.message}<br>
-      <small>${new Date(data.timestamp?.seconds * 1000 || Date.now()).toLocaleString()}</small><br>
-      <button data-id="${doc.id}" class="delete-btn">删除</button>
-    `;
-    list.appendChild(li);
-  });
-}
-
-// 处理表单提交
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const section = sectionInput.value;
-  if (!section) {
-    alert("请选择分区！");
-    return;
-  }
-
-  await addDoc(messagesRef, {
-    name: nameInput.value,
-    message: messageInput.value,
-    section: section,
-    timestamp: serverTimestamp()
-  });
-
-  nameInput.value = "";
-  messageInput.value = "";
-  sectionInput.value = "";
-
-  currentSection = section;
-  updateTabHighlight(section);
-  loadMessages();
-});
-
-// 删除留言
-list.addEventListener("click", async (e) => {
-  if (e.target.classList.contains("delete-btn")) {
-    const id = e.target.dataset.id;
-    if (confirm("确定要删除这条留言吗？")) {
-      await deleteDoc(docRef(db, "messages", id));
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await addDoc(messagesRef, {
+        name: nameInput.value,
+        message: messageInput.value,
+        timestamp: serverTimestamp()
+      });
+      nameInput.value = "";
+      messageInput.value = "";
       loadMessages();
-    }
-  }
-});
+    });
 
-// 分页按钮
-document.getElementById("nextPage").addEventListener("click", () => loadMessages("next"));
-document.getElementById("prevPage").addEventListener("click", () => loadMessages("prev"));
+    list.addEventListener("click", async (e) => {
+      if (e.target.classList.contains("delete-btn")) {
+        const id = e.target.dataset.id;
+        if (confirm("确定要删除这条留言吗？")) {
+          await deleteDoc(docRef(db, "messages", id));
+          loadMessages();
+        }
+      }
+    });
 
-// 点击分区切换
-tabs.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    tabs.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentSection = btn.dataset.section;
-    sectionInput.value = currentSection;
-    lastVisible = null;
-    firstVisible = null;
+    document.getElementById("nextPage").addEventListener("click", () => loadMessages("next"));
+    document.getElementById("prevPage").addEventListener("click", () => loadMessages("prev"));
+
     loadMessages();
-  });
-});
-
-function updateTabHighlight(section) {
-  tabs.forEach(btn => {
-    if (btn.dataset.section === section) {
-      btn.classList.add("active");
-    } else {
-      btn.classList.remove("active");
-    }
-  });
-}
-
-// 初始加载
-loadMessages();
-</script>
+  </script>
 </body>
 </html>
