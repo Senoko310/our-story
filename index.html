@@ -75,6 +75,13 @@
 
   <form id="messageForm">
     <input type="text" id="nameInput" placeholder="昵称" required><br>
+    <select id="sectionInput" required>
+  <option value="" disabled selected>选择分区</option>
+  <option value="闲聊区">🗨️ 闲聊区</option>
+  <option value="梦境集">🌙 梦境集</option>
+  <option value="影音角">🎥 影音角</option>
+  <option value="工作间">🖥️ 工作间</option>
+</select><br>
     <textarea id="messageInput" placeholder="写下你的留言..." required></textarea><br>
     <button type="submit">发送</button>
   </form>
@@ -109,6 +116,7 @@
 
     const form = document.getElementById("messageForm");
     const nameInput = document.getElementById("nameInput");
+    const sectionInput = document.getElementById("sectionInput");
     const messageInput = document.getElementById("messageInput");
     const list = document.getElementById("messageList");
 
@@ -152,6 +160,7 @@
       await addDoc(messagesRef, {
         name: nameInput.value,
         message: messageInput.value,
+        section: sectionInput.value,
         timestamp: serverTimestamp()
       });
       nameInput.value = "";
