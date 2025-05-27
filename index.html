@@ -116,123 +116,129 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, serverTimestamp,
-      query, orderBy, limit, startAfter, endBefore, getDocs,
-      deleteDoc, doc as docRef, where
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import {
+    getFirestore, collection, addDoc, serverTimestamp,
+    query, orderBy, limit, startAfter, endBefore, getDocs,
+    deleteDoc, doc as docRef, where
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBxH-cnv7jtJRuzhvBHRZVBNyXXG9dvdwM",
-      authDomain: "message-board-6ccb5.firebaseapp.com",
-      projectId: "message-board-6ccb5",
-      storageBucket: "message-board-6ccb5.appspot.com",
-      messagingSenderId: "860538002965",
-      appId: "1:860538002965:web:9bb3382be721f7c4bb781c"
-    };
+  const firebaseConfig = {
+    apiKey: "AIzaSyBxH-cnv7jtJRuzhvBHRZVBNyXXG9dvdwM",
+    authDomain: "message-board-6ccb5.firebaseapp.com",
+    projectId: "message-board-6ccb5",
+    storageBucket: "message-board-6ccb5.appspot.com",
+    messagingSenderId: "860538002965",
+    appId: "1:860538002965:web:9bb3382be721f7c4bb781c"
+  };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const messagesRef = collection(db, "messages");
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const messagesRef = collection(db, "messages");
 
-    const form = document.getElementById("messageForm");
-    const nameInput = document.getElementById("nameInput");
-    const messageInput = document.getElementById("messageInput");
-    const list = document.getElementById("messageList");
+  const form = document.getElementById("messageForm");
+  const nameInput = document.getElementById("nameInput");
+  const sectionInput = document.getElementById("sectionInput");
+  const messageInput = document.getElementById("messageInput");
+  const list = document.getElementById("messageList");
+  const tabs = document.querySelectorAll(".tab");
 
-    let pageSize = 20;
-    let lastVisible = null;
-    let firstVisible = null;
-    let currentDocs = [];
-    let currentSection = "闲聊区";
+  let pageSize = 20;
+  let lastVisible = null;
+  let firstVisible = null;
+  let currentSection = "闲聊区"; // 默认板块
 
-    async function loadMessages(direction = "initial") {
-      let q;
-      if (direction === "next" && lastVisible) {
-        q = query(
-          messagesRef,
-          where("section", "==", currentSection),
-          orderBy("timestamp", "desc"),
-          startAfter(lastVisible),
-          limit(pageSize)
-        );
-      } else if (direction === "prev" && firstVisible) {
-        q = query(
-          messagesRef,
-          where("section", "==", currentSection),
-          orderBy("timestamp", "desc"),
-          endBefore(firstVisible),
-          limit(pageSize)
-        );
-      } else {
-        q = query(
-          messagesRef,
-          where("section", "==", currentSection),
-          orderBy("timestamp", "desc"),
-          limit(pageSize)
-        );
-      }
-
-      const snapshot = await getDocs(q);
-      list.innerHTML = "";
-      currentDocs = [];
-
-      snapshot.forEach(doc => {
-        currentDocs.push(doc);
-        const data = doc.data();
-        const li = document.createElement("li");
-        li.innerHTML = `
-          <strong>${data.name}</strong>：${data.message}<br>
-          <small>${data.timestamp?.seconds ? new Date(data.timestamp.seconds * 1000).toLocaleString() : ''}</small><br>
-          <button data-id="${doc.id}" class="delete-btn">删除</button>
-        `;
-        list.appendChild(li);
-      });
-
-      firstVisible = currentDocs[0];
-      lastVisible = currentDocs[currentDocs.length - 1];
-    }
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      await addDoc(messagesRef, {
-        name: nameInput.value,
-        message: messageInput.value,
-        section: currentSection,
-        timestamp: serverTimestamp()
-      });
-      nameInput.value = "";
-      messageInput.value = "";
+  // 切换分区按钮
+  tabs.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      tabs.forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      currentSection = btn.dataset.section;
+      lastVisible = null;
+      firstVisible = null;
       loadMessages();
     });
+  });
 
-    list.addEventListener("click", async (e) => {
-      if (e.target.classList.contains("delete-btn")) {
-        const id = e.target.dataset.id;
-        if (confirm("确定要删除这条留言吗？")) {
-          await deleteDoc(docRef(db, "messages", id));
-          loadMessages();
-        }
-      }
+  async function loadMessages(direction = "initial") {
+    let q;
+
+    if (direction === "next" && lastVisible) {
+      q = query(
+        messagesRef,
+        where("section", "==", currentSection),
+        orderBy("timestamp", "desc"),
+        startAfter(lastVisible),
+        limit(pageSize)
+      );
+    } else if (direction === "prev" && firstVisible) {
+      q = query(
+        messagesRef,
+        where("section", "==", currentSection),
+        orderBy("timestamp", "desc"),
+        endBefore(firstVisible),
+        limit(pageSize)
+      );
+    } else {
+      q = query(
+        messagesRef,
+        where("section", "==", currentSection),
+        orderBy("timestamp", "desc"),
+        limit(pageSize)
+      );
+    }
+
+    const snapshot = await getDocs(q);
+    list.innerHTML = "";
+
+    if (snapshot.empty) {
+      list.innerHTML = "<li>暂无留言</li>";
+      return;
+    }
+
+    const docs = snapshot.docs;
+    firstVisible = docs[0];
+    lastVisible = docs[docs.length - 1];
+
+    docs.forEach(doc => {
+      const data = doc.data();
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <strong>${data.name}</strong>：${data.message}<br>
+        <small>${new Date(data.timestamp?.seconds * 1000 || Date.now()).toLocaleString()}</small><br>
+        <button data-id="${doc.id}" class="delete-btn">删除</button>
+      `;
+      list.appendChild(li);
     });
+  }
 
-    document.querySelectorAll(".tab").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        document.querySelectorAll(".tab").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        currentSection = btn.dataset.section;
-        firstVisible = null;
-        lastVisible = null;
-        loadMessages();
-      });
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    await addDoc(messagesRef, {
+      name: nameInput.value,
+      message: messageInput.value,
+      section: sectionInput.value,
+      timestamp: serverTimestamp()
     });
-
-    document.getElementById("nextPage").addEventListener("click", () => loadMessages("next"));
-    document.getElementById("prevPage").addEventListener("click", () => loadMessages("prev"));
-
-    // 初始加载
+    nameInput.value = "";
+    messageInput.value = "";
     loadMessages();
-  </script>
+  });
+
+  list.addEventListener("click", async (e) => {
+    if (e.target.classList.contains("delete-btn")) {
+      const id = e.target.dataset.id;
+      if (confirm("确定要删除这条留言吗？")) {
+        await deleteDoc(docRef(db, "messages", id));
+        loadMessages();
+      }
+    }
+  });
+
+  document.getElementById("nextPage").addEventListener("click", () => loadMessages("next"));
+  document.getElementById("prevPage").addEventListener("click", () => loadMessages("prev"));
+
+  loadMessages();
+</script>
 </body>
 </html>
