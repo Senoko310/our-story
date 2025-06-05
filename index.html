@@ -1,610 +1,506 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>我们的留言板 ❤️</title>
-  <style>
-    body {
-      background-color: #FFF8E7;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      color: #333;
-      padding: 20px;
-      margin: 0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类留言板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    h1 {
-      color: #FFC0CB;
-      text-align: center;
-      font-size: 2.5em;
-      margin-bottom: 10px;
-    }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
 
-    .subtitle {
-      text-align: center;
-      color: #ff99aa;
-      font-size: 1.2em;
-      margin-bottom: 30px;
-    }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-    /* 导航栏样式 */
-    .nav-container {
-      background-color: #FFF0F5;
-      border: 2px solid #FFC0CB;
-      border-radius: 15px;
-      padding: 20px;
-      margin: 20px auto;
-      max-width: 800px;
-      box-shadow: 0 4px 10px rgba(255, 182, 193, 0.3);
-    }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
 
-    .nav-tabs {
-      display: flex;
-      gap: 10px;
-      justify-content: center;
-      flex-wrap: wrap;
-    }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
 
-    .nav-tab {
-      padding: 12px 20px;
-      background-color: #FFF8E7;
-      border: 2px solid #FFC0CB;
-      border-radius: 20px;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      font-size: 1em;
-      color: #333;
-    }
+        /* 导航栏样式 */
+        .nav-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
 
-    .nav-tab:hover {
-      background-color: #FFE4E1;
-      transform: translateY(-2px);
-    }
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
-    .nav-tab.active {
-      background-color: #FFC0CB;
-      color: white;
-      box-shadow: 0 4px 10px rgba(255, 182, 193, 0.5);
-    }
+        .nav-tab {
+            padding: 12px 24px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+        }
 
-    /* 表单样式 */
-    form {
-      margin: 30px auto;
-      text-align: center;
-      max-width: 600px;
-      background-color: #FFF0F5;
-      padding: 25px;
-      border-radius: 15px;
-      border: 2px solid #FFC0CB;
-      box-shadow: 0 4px 10px rgba(255, 182, 193, 0.3);
-    }
+        .nav-tab:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
 
-    input, textarea {
-      width: 90%;
-      padding: 12px;
-      margin: 10px 0;
-      border: 2px solid #FFC0CB;
-      border-radius: 10px;
-      background-color: #FFF8E7;
-      font-size: 1em;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      box-sizing: border-box;
-    }
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
 
-    input:focus, textarea:focus {
-      outline: none;
-      border-color: #ff99aa;
-      background-color: #FFF0F5;
-    }
+        /* 输入区域样式 */
+        .input-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
 
-    button {
-      padding: 12px 25px;
-      background-color: #FFC0CB;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      font-size: 1em;
-      font-family: 'Comic Sans MS', cursive, sans-serif;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      margin: 5px;
-    }
+        .input-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
 
-    button:hover {
-      background-color: #ff99aa;
-      transform: translateY(-2px);
-    }
+        .name-input, .message-input {
+            flex: 1;
+            min-width: 200px;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
+        .name-input:focus, .message-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
 
-    /* 消息列表样式 */
-    .messages-section {
-      max-width: 800px;
-      margin: 0 auto;
-    }
+        .message-input {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
 
-    .section-title {
-      text-align: center;
-      color: #FFC0CB;
-      font-size: 1.8em;
-      margin: 30px 0 20px 0;
-      padding: 10px;
-      background-color: #FFF0F5;
-      border-radius: 10px;
-      border: 2px solid #FFC0CB;
-    }
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
 
-    ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
 
-    li {
-      background-color: #FFF0F5;
-      margin: 15px auto;
-      padding: 20px;
-      border-radius: 15px;
-      width: 95%;
-      max-width: 750px;
-      box-shadow: 0 4px 10px rgba(255, 182, 193, 0.3);
-      font-size: 1em;
-      border: 2px solid #FFE4E1;
-      transition: transform 0.2s ease;
-    }
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
 
-    li:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 15px rgba(255, 182, 193, 0.4);
-    }
+        /* 消息显示区域 */
+        .messages-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            min-height: 400px;
+        }
 
-    .message-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
 
-    .message-author {
-      font-weight: bold;
-      color: #FFC0CB;
-      font-size: 1.1em;
-    }
+        .message-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease;
+        }
 
-    .message-time {
-      color: #ff99aa;
-      font-size: 0.9em;
-    }
+        .message-item:hover {
+            transform: translateX(5px);
+        }
 
-    .message-content {
-      line-height: 1.6;
-      margin-bottom: 10px;
-      white-space: pre-wrap;
-    }
+        .message-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
 
-    .delete-btn {
-      background-color: #FFB6C1;
-      font-size: 0.9em;
-      padding: 6px 12px;
-    }
+        .message-author {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.1em;
+        }
 
-    .delete-btn:hover {
-      background-color: #FFA0B4;
-    }
+        .message-time {
+            font-size: 0.9em;
+            color: #666;
+        }
 
-    /* 分页样式 */
-    .pagination {
-      text-align: center;
-      margin: 30px 0;
-      padding: 20px;
-    }
+        .message-content {
+            line-height: 1.6;
+            color: #333;
+            white-space: pre-wrap;
+        }
 
-    .pagination button {
-      margin: 0 10px;
-      padding: 10px 20px;
-    }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
 
-    /* 加载和错误状态 */
-    .loading, .error, .empty {
-      text-align: center;
-      padding: 40px;
-      font-size: 1.1em;
-      color: #ff99aa;
-      background-color: #FFF0F5;
-      border-radius: 10px;
-      margin: 20px auto;
-      max-width: 600px;
-      border: 2px solid #FFE4E1;
-    }
+        .error {
+            background: #ffe6e6;
+            color: #d63031;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
 
-    .error {
-      color: #FF6B6B;
-      border-color: #FFB6C1;
-    }
-
-    /* 响应式设计 */
-    @media (max-width: 768px) {
-      body {
-        padding: 10px;
-      }
-      
-      .nav-tabs {
-        flex-direction: column;
-        align-items: center;
-      }
-      
-      .nav-tab {
-        width: 200px;
-        margin: 5px 0;
-      }
-      
-      input, textarea {
-        width: 95%;
-      }
-      
-      .message-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
-      }
-    }
-  </style>
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .nav-tabs {
+                justify-content: center;
+            }
+            
+            .nav-tab {
+                flex: 1;
+                min-width: 120px;
+            }
+        }
+    </style>
 </head>
 <body>
-  <h1>我们的留言板 ❤️</h1>
-  <div class="subtitle">分享你的想法，记录美好时光</div>
+    <div class="container">
+        <div class="header">
+            <h1>🌟 分类留言板 🌟</h1>
+            <p>分享你的想法，记录美好时光</p>
+        </div>
 
-  <!-- 导航栏 -->
-  <div class="nav-container">
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-category="chat">💬 闲聊区</button>
-      <button class="nav-tab" data-category="dreams">✨ 梦境集</button>
-      <button class="nav-tab" data-category="work">💼 工作间</button>
-      <button class="nav-tab" data-category="media">🎵 影音角</button>
-    </div>
-  </div>
-
-  <!-- 输入表单 -->
-  <form id="messageForm">
-    <input type="text" id="nameInput" placeholder="输入你的昵称..." required maxlength="20">
-    <textarea id="messageInput" placeholder="写下你的留言..." required maxlength="500" rows="4"></textarea>
-    <button type="submit" id="submitBtn">发送留言</button>
-  </form>
-
-  <!-- 消息显示区域 -->
-  <div class="messages-section">
-    <h2 class="section-title">💬 闲聊区</h2>
-    <ul id="messageList">
-      <li class="loading">加载中...</li>
-    </ul>
-  </div>
-
-  <!-- 分页控件 -->
-  <div class="pagination">
-    <button id="prevPage">上一页</button>
-    <button id="nextPage">下一页</button>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, serverTimestamp,
-      query, orderBy, limit, startAfter, endBefore, getDocs,
-      deleteDoc, doc as docRef, where, writeBatch
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    // Firebase 配置
-    const firebaseConfig = {
-      apiKey: "AIzaSyBxH-cnv7jtJRuzhvBHRZVBNyXXG9dvdwM",
-      authDomain: "message-board-6ccb5.firebaseapp.com",
-      projectId: "message-board-6ccb5",
-      storageBucket: "message-board-6ccb5.appspot.com",
-      messagingSenderId: "860538002965",
-      appId: "1:860538002965:web:9bb3382be721f7c4bb781c"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const messagesRef = collection(db, "messages");
-
-    // DOM 元素
-    const form = document.getElementById("messageForm");
-    const nameInput = document.getElementById("nameInput");
-    const messageInput = document.getElementById("messageInput");
-    const submitBtn = document.getElementById("submitBtn");
-    const list = document.getElementById("messageList");
-    const sectionTitle = document.querySelector(".section-title");
-    const navTabs = document.querySelectorAll('.nav-tab');
-    const prevPageBtn = document.getElementById("prevPage");
-    const nextPageBtn = document.getElementById("nextPage");
-
-    // 全局变量
-    let currentCategory = 'chat';
-    let pageSize = 20;
-    let lastVisible = null;
-    let firstVisible = null;
-    let currentDocs = [];
-    let isLoading = false;
-
-    const categoryNames = {
-      'chat': '💬 闲聊区',
-      'dreams': '✨ 梦境集',
-      'work': '💼 工作间',
-      'media': '🎵 影音角'
-    };
-
-    // 导航栏切换
-    navTabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        if (isLoading) return;
-        
-        // 更新导航栏状态
-        navTabs.forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        
-        // 更新当前分类
-        currentCategory = tab.dataset.category;
-        sectionTitle.textContent = categoryNames[currentCategory];
-        
-        // 重置分页状态
-        lastVisible = null;
-        firstVisible = null;
-        currentDocs = [];
-        
-        // 加载对应分类的消息
-        loadMessages();
-      });
-    });
-
-    // 加载消息函数
-    async function loadMessages(direction = "initial") {
-      if (isLoading) return;
-      isLoading = true;
-      
-      try {
-        list.innerHTML = '<li class="loading">加载中...</li>';
-        
-        let q;
-        
-        // 构建查询条件
-        if (currentCategory === 'chat') {
-          // 闲聊区：显示所有没有分类的旧消息 + 新的闲聊消息
-          if (direction === "next" && lastVisible) {
-            q = query(messagesRef, 
-              where('category', 'in', ['chat', null]), 
-              orderBy("timestamp", "desc"), 
-              startAfter(lastVisible), 
-              limit(pageSize)
-            );
-          } else if (direction === "prev" && firstVisible) {
-            q = query(messagesRef, 
-              where('category', 'in', ['chat', null]), 
-              orderBy("timestamp", "desc"), 
-              endBefore(firstVisible), 
-              limit(pageSize)
-            );
-          } else {
-            q = query(messagesRef, 
-              where('category', 'in', ['chat', null]), 
-              orderBy("timestamp", "desc"), 
-              limit(pageSize)
-            );
-          }
-        } else {
-          // 其他分类：只显示对应分类的消息
-          if (direction === "next" && lastVisible) {
-            q = query(messagesRef, 
-              where('category', '==', currentCategory), 
-              orderBy("timestamp", "desc"), 
-              startAfter(lastVisible), 
-              limit(pageSize)
-            );
-          } else if (direction === "prev" && firstVisible) {
-            q = query(messagesRef, 
-              where('category', '==', currentCategory), 
-              orderBy("timestamp", "desc"), 
-              endBefore(firstVisible), 
-              limit(pageSize)
-            );
-          } else {
-            q = query(messagesRef, 
-              where('category', '==', currentCategory), 
-              orderBy("timestamp", "desc"), 
-              limit(pageSize)
-            );
-          }
-        }
-
-        const snapshot = await getDocs(q);
-        list.innerHTML = "";
-        currentDocs = [];
-
-        if (snapshot.empty) {
-          list.innerHTML = `
-            <li class="empty">
-              <div>暂无留言，快来发布第一条吧！ 💕</div>
-            </li>
-          `;
-          updatePaginationButtons(false, false);
-          return;
-        }
-
-        snapshot.forEach(doc => {
-          currentDocs.push(doc);
-          const data = doc.data();
-          const li = document.createElement("li");
-          
-          const timestamp = data.timestamp?.seconds ? 
-            new Date(data.timestamp.seconds * 1000).toLocaleString('zh-CN') : 
-            '时间未知';
-          
-          li.innerHTML = `
-            <div class="message-header">
-              <span class="message-author">${escapeHtml(data.name || '匿名')}</span>
-              <span class="message-time">${timestamp}</span>
+        <!-- 导航栏 -->
+        <div class="nav-container">
+            <div class="nav-tabs">
+                <button class="nav-tab active" data-category="chat">💬 闲聊区</button>
+                <button class="nav-tab" data-category="dreams">✨ 梦境集</button>
+                <button class="nav-tab" data-category="work">💼 工作间</button>
+                <button class="nav-tab" data-category="media">🎵 影音角</button>
             </div>
-            <div class="message-content">${escapeHtml(data.message || '')}</div>
-            <button data-id="${doc.id}" class="delete-btn">删除</button>
-          `;
-          list.appendChild(li);
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="input-section">
+            <div class="input-group">
+                <input type="text" class="name-input" placeholder="请输入你的昵称..." maxlength="20">
+                <textarea class="message-input" placeholder="分享你的想法..." maxlength="500"></textarea>
+            </div>
+            <button class="submit-btn">发布留言</button>
+        </div>
+
+        <!-- 消息显示区域 -->
+        <div class="messages-section">
+            <h2 class="section-title">💬 闲聊区</h2>
+            <div class="messages-container">
+                <div class="loading">加载中...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase 配置 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.23.0/firebase-firestore-compat.min.js"></script>
+
+    <script>
+        // Firebase 配置 - 请替换为你的配置
+        const firebaseConfig = {
+            // 请在这里填入你的 Firebase 配置
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "your-sender-id",
+            appId: "your-app-id"
+        };
+
+        // 初始化 Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // 全局变量
+        let currentCategory = 'chat';
+        const categoryNames = {
+            'chat': '💬 闲聊区',
+            'dreams': '✨ 梦境集',
+            'work': '💼 工作间',
+            'media': '🎵 影音角'
+        };
+
+        // DOM 元素
+        const navTabs = document.querySelectorAll('.nav-tab');
+        const nameInput = document.querySelector('.name-input');
+        const messageInput = document.querySelector('.message-input');
+        const submitBtn = document.querySelector('.submit-btn');
+        const messagesContainer = document.querySelector('.messages-container');
+        const sectionTitle = document.querySelector('.section-title');
+
+        // 导航栏切换
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // 移除所有活跃状态
+                navTabs.forEach(t => t.classList.remove('active'));
+                // 添加当前活跃状态
+                tab.classList.add('active');
+                
+                // 更新当前分类
+                currentCategory = tab.dataset.category;
+                sectionTitle.textContent = categoryNames[currentCategory];
+                
+                // 加载对应分类的消息
+                loadMessages();
+            });
         });
 
-        // 更新分页状态
-        firstVisible = currentDocs[0];
-        lastVisible = currentDocs[currentDocs.length - 1];
-        
-        // 更新分页按钮状态
-        updatePaginationButtons(true, currentDocs.length === pageSize);
+        // 发布留言
+        submitBtn.addEventListener('click', async () => {
+            const name = nameInput.value.trim();
+            const message = messageInput.value.trim();
 
-      } catch (error) {
-        console.error('加载消息失败:', error);
-        list.innerHTML = `
-          <li class="error">
-            <div>加载失败，请刷新页面重试 😢</div>
-          </li>
-        `;
-        updatePaginationButtons(false, false);
-      } finally {
-        isLoading = false;
-      }
-    }
+            if (!name || !message) {
+                alert('请填写昵称和留言内容！');
+                return;
+            }
 
-    // 更新分页按钮状态
-    function updatePaginationButtons(hasPrev, hasNext) {
-      prevPageBtn.disabled = !hasPrev || !firstVisible;
-      nextPageBtn.disabled = !hasNext || !lastVisible;
-    }
+            submitBtn.disabled = true;
+            submitBtn.textContent = '发布中...';
 
-    // HTML转义函数
-    function escapeHtml(text) {
-      const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      };
-      return text.replace(/[&<>"']/g, m => map[m]);
-    }
+            try {
+                // 添加新留言到对应分类
+                await db.collection('messages').add({
+                    name: name,
+                    message: message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    category: currentCategory,
+                    createdAt: new Date().toISOString()
+                });
 
-    // 发布留言
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      
-      const name = nameInput.value.trim();
-      const message = messageInput.value.trim();
-      
-      if (!name || !message) {
-        alert('请填写昵称和留言内容！');
-        return;
-      }
-      
-      submitBtn.disabled = true;
-      submitBtn.textContent = '发送中...';
-      
-      try {
-        await addDoc(messagesRef, {
-          name: name,
-          message: message,
-          timestamp: serverTimestamp(),
-          category: currentCategory,
-          createdAt: new Date().toISOString()
+                // 清空输入框
+                nameInput.value = '';
+                messageInput.value = '';
+                
+                // 重新加载消息
+                loadMessages();
+                
+            } catch (error) {
+                console.error('发布留言失败:', error);
+                alert('发布失败，请重试！');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '发布留言';
+            }
         });
-        
-        nameInput.value = "";
-        messageInput.value = "";
-        
-        // 重新加载当前分类的消息
-        lastVisible = null;
-        firstVisible = null;
-        currentDocs = [];
-        loadMessages();
-        
-      } catch (error) {
-        console.error('发布留言失败:', error);
-        alert('发布失败，请重试！');
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = '发送留言';
-      }
-    });
 
-    // 删除留言
-    list.addEventListener("click", async (e) => {
-      if (e.target.classList.contains("delete-btn")) {
-        const id = e.target.dataset.id;
-        if (confirm("确定要删除这条留言吗？ 💔")) {
-          try {
-            await deleteDoc(docRef(db, "messages", id));
+        // 加载消息
+        async function loadMessages() {
+            messagesContainer.innerHTML = '<div class="loading">加载中...</div>';
+
+            try {
+                let query;
+                
+                if (currentCategory === 'chat') {
+                    // 闲聊区：显示所有没有分类的旧消息 + 新的闲聊消息
+                    query = db.collection('messages')
+                        .where('category', 'in', ['chat', null]) // null 为旧数据
+                        .orderBy('timestamp', 'desc')
+                        .limit(50);
+                } else {
+                    // 其他分类：只显示对应分类的消息
+                    query = db.collection('messages')
+                        .where('category', '==', currentCategory)
+                        .orderBy('timestamp', 'desc')
+                        .limit(50);
+                }
+
+                const snapshot = await query.get();
+                
+                if (snapshot.empty) {
+                    messagesContainer.innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #666;">
+                            <p>暂无留言，快来发布第一条吧！</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const messagesHTML = snapshot.docs.map(doc => {
+                    const data = doc.data();
+                    const time = data.timestamp ? 
+                        data.timestamp.toDate().toLocaleString('zh-CN') : 
+                        '时间未知';
+
+                    return `
+                        <div class="message-item">
+                            <div class="message-header">
+                                <span class="message-author">${escapeHtml(data.name || '匿名')}</span>
+                                <span class="message-time">${time}</span>
+                            </div>
+                            <div class="message-content">${escapeHtml(data.message || '')}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                messagesContainer.innerHTML = messagesHTML;
+
+            } catch (error) {
+                console.error('加载消息失败:', error);
+                messagesContainer.innerHTML = `
+                    <div class="error">
+                        加载失败，请刷新页面重试
+                    </div>
+                `;
+            }
+        }
+
+        // 转义HTML字符，防止XSS攻击
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // 回车键发送
+        messageInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                submitBtn.click();
+            }
+        });
+
+        // 页面加载完成后初始化
+        window.addEventListener('load', () => {
+            // 数据迁移：将没有分类的旧数据标记为闲聊区
+            migrateOldData();
+            // 加载初始消息
             loadMessages();
-          } catch (error) {
-            console.error('删除失败:', error);
-            alert('删除失败，请重试！');
-          }
-        }
-      }
-    });
-
-    // 分页控件
-    nextPageBtn.addEventListener("click", () => {
-      if (!isLoading && lastVisible) {
-        loadMessages("next");
-      }
-    });
-
-    prevPageBtn.addEventListener("click", () => {
-      if (!isLoading && firstVisible) {
-        loadMessages("prev");
-      }
-    });
-
-    // 数据迁移：将旧数据标记为闲聊区
-    async function migrateOldData() {
-      try {
-        // 查找没有category字段的文档
-        const q = query(messagesRef, limit(100));
-        const snapshot = await getDocs(q);
-        
-        const batch = writeBatch(db);
-        let needsUpdate = false;
-        
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          if (!data.category) {
-            batch.update(doc.ref, { category: 'chat' });
-            needsUpdate = true;
-          }
         });
-        
-        if (needsUpdate) {
-          await batch.commit();
-          console.log('旧数据迁移完成');
+
+        // 数据迁移函数：将旧数据迁移到闲聊区
+        async function migrateOldData() {
+            try {
+                const snapshot = await db.collection('messages')
+                    .where('category', '==', null)
+                    .limit(100)
+                    .get();
+
+                if (!snapshot.empty) {
+                    const batch = db.batch();
+                    snapshot.docs.forEach(doc => {
+                        batch.update(doc.ref, { category: 'chat' });
+                    });
+                    await batch.commit();
+                    console.log('旧数据迁移完成');
+                }
+            } catch (error) {
+                console.error('数据迁移失败:', error);
+            }
         }
-      } catch (error) {
-        console.error('数据迁移失败:', error);
-      }
-    }
 
-    // 回车键发送（Shift+Enter换行）
-    messageInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        form.dispatchEvent(new Event('submit'));
-      }
-    });
+        // 实时监听消息更新
+        function setupRealtimeListener() {
+            let query;
+            
+            if (currentCategory === 'chat') {
+                query = db.collection('messages')
+                    .where('category', 'in', ['chat', null])
+                    .orderBy('timestamp', 'desc')
+                    .limit(50);
+            } else {
+                query = db.collection('messages')
+                    .where('category', '==', currentCategory)
+                    .orderBy('timestamp', 'desc')
+                    .limit(50);
+            }
 
-    // 页面加载完成后初始化
-    window.addEventListener('load', async () => {
-      // 先进行数据迁移
-      await migrateOldData();
-      // 然后加载消息
-      loadMessages();
-    });
-  </script>
+            return query.onSnapshot((snapshot) => {
+                if (!snapshot.empty) {
+                    loadMessages();
+                }
+            });
+        }
+
+        // 启动实时监听
+        let unsubscribe = setupRealtimeListener();
+
+        // 当切换分类时重新设置监听器
+        navTabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                if (unsubscribe) {
+                    unsubscribe();
+                }
+                setTimeout(() => {
+                    unsubscribe = setupRealtimeListener();
+                }, 100);
+            });
+        });
+    </script>
 </body>
 </html>
